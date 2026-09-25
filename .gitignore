@@ -1,5 +1,27 @@
+# Virtual environment
 venv/
+.venv/
+
+# Python
 __pycache__/
 *.pyc
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Uploaded resumes / generated data
+resumes/*
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
 .env
-candidate_profile.csv
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

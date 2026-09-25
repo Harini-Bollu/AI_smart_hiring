@@ -1,673 +1,1164 @@
+# ============================================================
+# AI SMART HIRING
+# ROBUST CANDIDATE INFORMATION EXTRACTOR
+# ============================================================
+
 import re
-import pandas as pd
-from datetime import datetime
 
-SKILLS_LIST=[
-"Python",
-"Java",
-"C++",
-"C#",
-"C",
-"JavaScript",
-"TypeScript",
-"R",
-"MATLAB",
-"HTML",
-"CSS",
-"React",
-"React.js",
-"Node.js",
-"Django",
-"Flask",
-"SQL",
-"MySQL",
-"PostgreSQL",
-"SQLite",
-"MongoDB",
-"Oracle",
-"PL/SQL",
-"Machine Learning",
-"Deep Learning",
-"Artificial Intelligence",
-"Data Science",
-"Data Analytics",
-"Natural Language Processing",
-"NLP",
-"Computer Vision",
-"Pandas",
-"NumPy",
-"Matplotlib",
-"Seaborn",
-"TensorFlow",
-"PyTorch",
-"Scikit-learn",
-"OpenCV",
-"BeautifulSoup",
-"Scrapy",
-"Selenium",
-"Git",
-"GitHub",
-"Jupyter",
-"Jupyter Notebook",
-"Visual Studio",
-"Microsoft Excel",
-"Microsoft Word",
-"Microsoft PowerPoint",
-"Linux",
-"Unix",
-"Windows",
-"HTTP",
-"HTTPS",
-"TLS",
-"REST API",
-"Socket Programming",
-"Operating Systems",
-"DBMS",
-"Data Structures",
-"Algorithms",
-"Computer Networks"
+
+# ============================================================
+# SKILLS
+# ============================================================
+
+SKILLS_LIST = [
+    # Programming
+    "Python", "Java", "C", "C++", "C#", "R",
+    "JavaScript", "TypeScript", "Go", "PHP", "Ruby",
+    "Kotlin", "Swift",
+
+    # Web
+    "HTML", "CSS", "React", "React.js", "Angular",
+    "Vue", "Node.js", "Express.js", "Django", "Flask",
+    "FastAPI", "Bootstrap", "Tailwind",
+
+    # Database
+    "SQL", "MySQL", "PostgreSQL", "MongoDB",
+    "SQLite", "Oracle", "Redis", "Firebase",
+
+    # Data Science / AI
+    "Machine Learning", "Deep Learning",
+    "Artificial Intelligence", "Data Science",
+    "Natural Language Processing", "NLP",
+    "Computer Vision", "Generative AI",
+    "TensorFlow", "PyTorch", "Scikit-learn",
+    "Keras", "Pandas", "NumPy",
+    "Matplotlib", "Seaborn",
+    "OpenCV", "Hugging Face",
+    "Transformers",
+
+    # Cloud / DevOps
+    "AWS", "Azure", "Google Cloud", "GCP",
+    "Docker", "Kubernetes", "Jenkins",
+    "Git", "GitHub", "GitLab",
+    "CI/CD",
+
+    # Tools
+    "Jupyter", "Jupyter Notebook",
+    "VS Code", "Postman",
+    "Linux", "Power BI", "Tableau",
+    "Excel",
+
+    # Concepts
+    "OOP", "Object Oriented Programming",
+    "Data Structures", "Algorithms",
+    "REST API", "API",
+    "Agile", "Scrum",
+    "Cybersecurity",
+    "Computer Networks",
+    "Operating Systems"
 ]
 
-SECTION_NAMES={
-"summary":[
-"summary",
-"professional summary",
-"profile",
-"career objective",
-"objective",
-"about me"
-],
-"education":[
-"education",
-"educational background",
-"academic background",
-"academic qualifications",
-"qualifications"
-],
-"skills":[
-"skills",
-"technical skills",
-"technical expertise",
-"technical competencies",
-"core skills",
-"technologies",
-"skills and technologies"
-],
-"experience":[
-"experience",
-"work experience",
-"professional experience",
-"employment history",
-"work history",
-"career history",
-"internship experience"
-],
-"projects":[
-"projects",
-"technical projects",
-"academic projects",
-"personal projects",
-"project experience",
-"key projects"
-],
-"certifications":[
-"certifications",
-"certificates",
-"professional certifications",
-"courses",
-"training",
-"courses and certifications"
-],
-"awards":[
-"awards",
-"achievements",
-"accomplishments",
-"honors",
-"awards and achievements"
-]
+
+# ============================================================
+# SECTION HEADINGS
+# ============================================================
+
+SECTION_ALIASES = {
+
+    "summary": [
+        "summary",
+        "professional summary",
+        "profile",
+        "professional profile",
+        "career objective",
+        "objective",
+        "about me",
+        "about"
+    ],
+
+    "education": [
+        "education",
+        "academic background",
+        "educational background",
+        "academic qualifications",
+        "qualifications"
+    ],
+
+    "skills": [
+        "skills",
+        "technical skills",
+        "technical skill",
+        "core skills",
+        "key skills",
+        "skills & technologies",
+        "technical competencies",
+        "technologies",
+        "technology stack",
+        "tools & technologies"
+    ],
+
+    "experience": [
+        "experience",
+        "work experience",
+        "professional experience",
+        "employment history",
+        "work history",
+        "internship",
+        "internships",
+        "industrial experience",
+        "professional experience"
+    ],
+
+    "projects": [
+        "projects",
+        "project",
+        "academic projects",
+        "academic project",
+        "personal projects",
+        "personal project",
+        "key projects",
+        "major projects",
+        "project experience"
+    ],
+
+    "certifications": [
+        "certifications",
+        "certification",
+        "certificates",
+        "certificate",
+        "professional certifications",
+        "courses",
+        "courses & certifications"
+    ],
+
+    "achievements": [
+        "achievements",
+        "awards",
+        "honors",
+        "accomplishments",
+        "extra curricular",
+        "extracurricular",
+        "activities"
+    ]
 }
 
+
+# ============================================================
+# BLOCKED NAME WORDS
+# ============================================================
+
+NAME_BLOCKED_WORDS = {
+    "resume",
+    "curriculum",
+    "vitae",
+    "curriculum vitae",
+    "cv",
+    "career",
+    "objective",
+    "career objective",
+    "summary",
+    "professional summary",
+    "profile",
+    "about",
+    "education",
+    "skills",
+    "technical skills",
+    "experience",
+    "work experience",
+    "professional experience",
+    "internship",
+    "internships",
+    "projects",
+    "project",
+    "certifications",
+    "certification",
+    "certificates",
+    "achievements",
+    "contact",
+    "contact information",
+    "phone",
+    "email",
+    "address",
+    "references",
+    "declaration"
+}
+
+
+# ============================================================
+# TEXT CLEANING
+# ============================================================
+
 def clean_text(text):
+
     if not text:
         return ""
-    text=text.replace("\r\n","\n")
-    text=text.replace("\r","\n")
-    text=text.replace("\t"," ")
-    text=re.sub(r"([A-Za-z]{2,})\n([a-z]{2,})",r"\1\2",text)
-    text=re.sub(r"[ ]{2,}"," ",text)
-    text=re.sub(r"\n{3,}","\n\n",text)
+
+    text = text.replace(
+        "\x00",
+        " "
+    )
+
+    text = text.replace(
+        "\r",
+        "\n"
+    )
+
+    text = re.sub(
+        r"[ \t]+",
+        " ",
+        text
+    )
+
+    text = re.sub(
+        r"\n{3,}",
+        "\n\n",
+        text
+    )
+
     return text.strip()
 
+
 def clean_line(line):
-    if not line:
-        return ""
-    line=line.strip()
-    line=re.sub(r"^[•●▪◦■□◆◇*\\\-–—]+\s*","",line)
-    line=line.replace("","")
-    line=re.sub(
-        r"\b([A-Za-z]{2,})\s+([a-z]{2,})\b",
-        lambda m:m.group(1)+m.group(2)
-        if len(m.group(1))>=3 and len(m.group(2))<=4
-        else m.group(0),
+
+    line = re.sub(
+        r"\s+",
+        " ",
         line
     )
-    line=re.sub(r"\s+"," ",line)
+
     return line.strip()
 
-def normalize_heading(line):
-    line=clean_line(line)
-    line=re.sub(r"^\d+\s*[.)\-:]\s*","",line)
-    line=line.rstrip(":")
-    return line.lower().strip()
 
-def detect_section(line):
-    normalized=normalize_heading(line)
-    if not normalized:
-        return None
-    for section,names in SECTION_NAMES.items():
-        for name in names:
-            if normalized==name.lower():
-                return section
-    return None
+def get_lines(text):
 
-def extract_sections(text):
-    text=clean_text(text)
-    lines=text.split("\n")
-    sections={key:[] for key in SECTION_NAMES}
-    current_section=None
-    for raw_line in lines:
-        line=clean_line(raw_line)
-        if not line:
-            continue
-        detected=detect_section(line)
-        if detected:
-            current_section=detected
-            continue
-        if current_section:
-            sections[current_section].append(line)
-    for section in sections:
-        sections[section]="\n".join(sections[section]).strip()
-    return sections
-
-def extract_email(text):
-    pattern=r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"
-    match=re.search(pattern,text)
-    if match:
-        return match.group(0)
-    return None
-
-def extract_phone(text):
-    patterns=[
-        r"\+\d{1,3}[\s.-]?\d{5}[\s.-]?\d{5}",
-        r"\+\d{1,3}[\s.-]?\d{10}",
-        r"\b[6-9]\d{4}[\s.-]\d{5}\b",
-        r"\b[6-9]\d{9}\b",
-        r"\b[6-9]\d{4}-\d{5}\b"
+    return [
+        clean_line(line)
+        for line in text.splitlines()
+        if clean_line(line)
     ]
-    for pattern in patterns:
-        match=re.search(pattern,text)
-        if match:
-            phone=match.group(0)
-            digits=re.sub(r"\D","",phone)
-            if digits.startswith("91") and len(digits)==12:
-                return "+91 "+digits[2:7]+" "+digits[7:]
-            if len(digits)==10:
-                return "+91 "+digits[:5]+" "+digits[5:]
-            return phone
-    return None
 
-def is_valid_name(line):
-    if not line:
-        return False
-    line=clean_line(line)
-    if "@" in line:
-        return False
-    if re.search(r"(linkedin|github|https?://|www\.)",line,re.IGNORECASE):
-        return False
-    if re.search(r"\d{5,}",line):
-        return False
-    if re.search(r"\b(address|city|province|country)\b",line,re.IGNORECASE):
-        return False
-    words=re.findall(r"[A-Za-z]+(?:['-][A-Za-z]+)?",line)
-    if not 2<=len(words)<=4:
-        return False
-    blocked={
-        "python",
-        "java",
-        "javascript",
-        "typescript",
-        "html",
-        "css",
-        "sql",
-        "mysql",
-        "postgresql",
-        "github",
-        "git",
-        "skills",
-        "technical",
-        "projects",
-        "experience",
-        "education",
-        "certifications",
-        "awards",
-        "university",
-        "college",
-        "department",
-        "science",
-        "engineering",
-        "visual",
-        "studio",
-        "microsoft",
-        "intern",
-        "internship",
-        "resume",
-        "curriculum",
-        "vitae"
-    }
-    lower_words={word.lower() for word in words}
-    if lower_words.intersection(blocked):
-        return False
-    if not all(
-        re.fullmatch(r"[A-Za-z]+(?:['-][A-Za-z]+)?",word)
-        for word in words
-    ):
-        return False
-    return True
+
+# ============================================================
+# NAME EXTRACTION
+# ============================================================
 
 def extract_name(text):
-    lines=[
-        clean_line(line)
-        for line in text.split("\n")
-        if clean_line(line)
-    ]
-    for line in lines[:12]:
-        if is_valid_name(line):
-            return line
+
+    lines = get_lines(text)
+
+    # --------------------------------------------------------
+    # First: look at the first 20 lines
+    # --------------------------------------------------------
+
     for line in lines[:20]:
-        words=line.split()
-        if 2<=len(words)<=4:
-            if all(word[0].isupper() for word in words if word):
-                if is_valid_name(line):
-                    return line
+
+        candidate = line.strip()
+
+        if not candidate:
+            continue
+
+        if "@" in candidate:
+            continue
+
+        if re.search(
+            r"\d{3,}",
+            candidate
+        ):
+            continue
+
+        lower = candidate.lower()
+
+        if lower in NAME_BLOCKED_WORDS:
+            continue
+
+        # Remove labels such as Name:
+        candidate = re.sub(
+            r"^(name|full name)\s*:\s*",
+            "",
+            candidate,
+            flags=re.I
+        ).strip()
+
+        words = candidate.split()
+
+        if not (
+            2 <= len(words) <= 5
+        ):
+            continue
+
+        valid = True
+
+        for word in words:
+
+            word = word.strip(
+                ".,:-"
+            )
+
+            if not word:
+                valid = False
+                break
+
+            if not re.match(
+                r"^[A-Za-z][A-Za-z.'-]*$",
+                word
+            ):
+                valid = False
+                break
+
+            if word.lower() in NAME_BLOCKED_WORDS:
+                valid = False
+                break
+
+        if not valid:
+            continue
+
+        # Don't accept long sentence-like lines
+        if len(candidate) > 45:
+            continue
+
+        # Good candidate
+        return candidate.title()
+
+    # --------------------------------------------------------
+    # Look for explicit "Name:"
+    # --------------------------------------------------------
+
+    for line in lines[:40]:
+
+        match = re.search(
+            r"^(?:name|full name)\s*:\s*(.+)$",
+            line,
+            flags=re.I
+        )
+
+        if match:
+
+            name = match.group(1).strip()
+
+            if name:
+                return name.title()
+
+    return "Not detected"
+
+
+# ============================================================
+# EMAIL
+# ============================================================
+
+def extract_email(text):
+
+    match = re.search(
+        r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b",
+        text
+    )
+
+    if match:
+        return match.group(0)
+
+    return ""
+
+
+# ============================================================
+# PHONE
+# ============================================================
+
+def extract_phone(text):
+
+    patterns = [
+        r"\+91[\s-]?\d{5}[\s-]?\d{5}",
+        r"\+91[\s-]?\d{10}",
+        r"\b\d{10}\b",
+        r"\b\d{5}[\s-]\d{5}\b"
+    ]
+
+    for pattern in patterns:
+
+        match = re.search(
+            pattern,
+            text
+        )
+
+        if match:
+
+            phone = match.group(0)
+
+            digits = re.sub(
+                r"\D",
+                "",
+                phone
+            )
+
+            if len(digits) == 10:
+
+                return phone
+
+            if len(digits) == 12 and digits.startswith("91"):
+
+                return "+" + digits
+
+    return ""
+
+
+# ============================================================
+# SECTION DETECTION
+# ============================================================
+
+def normalize_heading(line):
+
+    value = line.lower().strip()
+
+    value = re.sub(
+        r"^[•●▪■*#\-\d.)]+\s*",
+        "",
+        value
+    )
+
+    value = re.sub(
+        r"[:\-|]+$",
+        "",
+        value
+    )
+
+    value = re.sub(
+        r"\s+",
+        " ",
+        value
+    )
+
+    return value.strip()
+
+
+def detect_section(line):
+
+    normalized = normalize_heading(
+        line
+    )
+
+    if len(normalized) > 60:
+        return None
+
+    for section, aliases in SECTION_ALIASES.items():
+
+        for alias in aliases:
+
+            if normalized == alias:
+
+                return section
+
     return None
 
+
+def extract_sections(text):
+
+    lines = get_lines(text)
+
+    sections = {
+        key: []
+        for key in SECTION_ALIASES
+    }
+
+    current_section = None
+
+    for line in lines:
+
+        detected = detect_section(
+            line
+        )
+
+        if detected:
+
+            current_section = detected
+
+            continue
+
+        if current_section:
+
+            sections[
+                current_section
+            ].append(line)
+
+    return sections
+
+
+# ============================================================
+# SKILLS EXTRACTION
+# ============================================================
+
 def extract_skills(text):
-    sections=extract_sections(text)
-    skills_text=sections["skills"]
-    if not skills_text:
-        skills_text=text
-    found=[]
-    skills_sorted=sorted(SKILLS_LIST,key=len,reverse=True)
+
+    found = []
+
+    text_lower = text.lower()
+
+    # Sort longer skills first so that
+    # "Machine Learning" is checked before "Learning"
+    skills_sorted = sorted(
+        SKILLS_LIST,
+        key=len,
+        reverse=True
+    )
+
     for skill in skills_sorted:
-        pattern=r"(?<![A-Za-z0-9])"+re.escape(skill)+r"(?![A-Za-z0-9])"
-        if re.search(pattern,skills_text,re.IGNORECASE):
-            if not any(existing.lower()==skill.lower() for existing in found):
+
+        pattern = re.escape(
+            skill.lower()
+        )
+
+        if re.search(
+            r"(?<![a-z0-9])"
+            + pattern +
+            r"(?![a-z0-9])",
+            text_lower
+        ):
+
+            if skill not in found:
+
                 found.append(skill)
+
     return found
 
-def extract_education(text):
-    sections=extract_sections(text)
-    education_text=sections["education"]
-    if not education_text:
-        return []
-    result=[]
-    for line in education_text.split("\n"):
-        line=clean_line(line)
-        if not line:
-            continue
-        if line not in result:
-            result.append(line)
-    return result
 
-def looks_like_project_title(line):
-    line_lower=line.lower()
-    description_words=[
-        "developed",
-        "implemented",
-        "performed",
-        "created",
-        "used",
-        "analyzed",
-        "designed",
-        "built",
-        "responsible",
-        "worked",
-        "project involved"
-    ]
-    if any(line_lower.startswith(word) for word in description_words):
-        return False
-    if re.search(
-        r"\b(system|application|website|platform|prediction|analysis|analyzer|management|using|detection)\b",
-        line_lower
-    ):
-        if len(line.split())<=15:
-            return True
-    if len(line.split())<=10:
-        words=line.split()
-        capital_count=sum(
-            1
-            for word in words
-            if word and word[0].isupper()
-        )
-        if capital_count>=max(2,len(words)//2):
-            return True
-    return False
+# ============================================================
+# EXPERIENCE EXTRACTION
+# ============================================================
 
-def extract_projects(text):
-    sections=extract_sections(text)
-    project_text=sections["projects"]
-    if not project_text:
-        return []
-    lines=[
-        clean_line(line)
-        for line in project_text.split("\n")
-        if clean_line(line)
-    ]
-    projects=[]
-    current_title=None
-    current_description=[]
+def extract_experience(text, sections):
 
-    def save_current():
-        nonlocal current_title
-        nonlocal current_description
-        if not current_title:
-            return
-        result=current_title
-        if current_description:
-            description=" ".join(current_description)
-            result+=" | "+description
-        result=re.sub(r"\s+"," ",result).strip()
-        if result not in projects:
-            projects.append(result)
-        current_title=None
-        current_description=[]
+    experience = []
 
-    for line in lines:
-        if re.fullmatch(
-            r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}",
-            line,
-            re.IGNORECASE
-        ):
-            continue
-        if looks_like_project_title(line):
-            save_current()
-            current_title=line
-        else:
-            if current_title:
-                current_description.append(line)
-            else:
-                current_title=line
-    save_current()
-    return projects
+    # --------------------------------------------------------
+    # First use EXPERIENCE section
+    # --------------------------------------------------------
 
-def extract_experience(text):
-    sections=extract_sections(text)
-    experience_text=sections["experience"]
-    if not experience_text:
-        return []
-    lines=[
-        clean_line(line)
-        for line in experience_text.split("\n")
-        if clean_line(line)
-    ]
-    result=[]
-    for line in lines:
-        if line.lower() in [
-            "experience",
-            "work experience",
-            "professional experience"
-        ]:
-            continue
-        if line not in result:
-            result.append(line)
-    return result
-
-def extract_certifications(text):
-    sections=extract_sections(text)
-    cert_text=sections["certifications"]
-    if not cert_text:
-        return []
-    lines=[
-        clean_line(line)
-        for line in cert_text.split("\n")
-        if clean_line(line)
-    ]
-    result=[]
-    current=None
-    for line in lines:
-        if re.fullmatch(
-            r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}",
-            line,
-            re.IGNORECASE
-        ):
-            if current:
-                current+=" - "+line
-            continue
-        if current:
-            current+=" - "+line
-        else:
-            current=line
-    if current:
-        result.append(re.sub(r"\s+"," ",current).strip())
-    final=[]
-    for item in result:
-        if item not in final:
-            final.append(item)
-    return final
-
-def extract_awards(text):
-    sections=extract_sections(text)
-    award_text=sections["awards"]
-    if not award_text:
-        return []
-    lines=[
-        clean_line(line)
-        for line in award_text.split("\n")
-        if clean_line(line)
-    ]
-    awards=[]
-    current=None
-    award_start_pattern=re.compile(
-        r"\b(secured|won|winner|position|award|achievement|honor|hackathon|first|second|third)\b",
-        re.IGNORECASE
+    section_lines = sections.get(
+        "experience",
+        []
     )
-    for line in lines:
-        if re.fullmatch(
-            r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}",
-            line,
-            re.IGNORECASE
-        ):
-            continue
-        if award_start_pattern.search(line):
-            if current:
-                awards.append(current.strip())
-            current=line
-        else:
-            if current:
-                current+=" "+line
-    if current:
-        awards.append(current.strip())
-    cleaned=[]
-    for award in awards:
-        award=re.sub(r"\s+"," ",award).strip()
-        if award and award not in cleaned:
-            cleaned.append(award)
-    return cleaned
 
-def calculate_experience_years(text):
-    sections=extract_sections(text)
-    experience_text=sections["experience"]
-    if not experience_text:
-        return None
-    text_lower=experience_text.lower()
+    if section_lines:
 
-    patterns=[
-        r"(\d+(?:\.\d+)?)\s*\+?\s*years?\s+of\s+experience",
-        r"(\d+(?:\.\d+)?)\s*\+?\s*years?\s+experience",
-        r"(\d+(?:\.\d+)?)\s*\+?\s*yrs?\s+of\s+experience",
-        r"(\d+(?:\.\d+)?)\s*\+?\s*yrs?\s+experience"
+        current_entry = []
+
+        for line in section_lines:
+
+            if not line:
+                continue
+
+            # New entry indicators:
+            # company names, job titles, dates etc.
+            date_match = re.search(
+                r"\b(?:19|20)\d{2}\b.*\b(?:19|20)\d{2}\b",
+                line
+            )
+
+            title_match = re.search(
+                r"\b("
+                r"intern|internship|developer|engineer|"
+                r"analyst|developer|designer|manager|"
+                r"trainee|associate|consultant"
+                r")\b",
+                line,
+                re.I
+            )
+
+            if (
+                current_entry
+                and (
+                    date_match
+                    or title_match
+                )
+            ):
+
+                experience.append(
+                    " ".join(
+                        current_entry
+                    )
+                )
+
+                current_entry = []
+
+            current_entry.append(
+                line
+            )
+
+        if current_entry:
+
+            experience.append(
+                " ".join(
+                    current_entry
+                )
+            )
+
+    # --------------------------------------------------------
+    # Fallback keyword scanning
+    # --------------------------------------------------------
+
+    if not experience:
+
+        lines = get_lines(text)
+
+        keywords = [
+            "intern",
+            "internship",
+            "worked as",
+            "working as",
+            "developer",
+            "software engineer",
+            "data scientist",
+            "data analyst",
+            "machine learning engineer",
+            "research intern",
+            "web developer",
+            "python developer",
+            "full stack"
+        ]
+
+        for i, line in enumerate(lines):
+
+            lower = line.lower()
+
+            if any(
+                keyword in lower
+                for keyword in keywords
+            ):
+
+                block = []
+
+                for x in range(
+                    max(0, i - 1),
+                    min(
+                        len(lines),
+                        i + 4
+                    )
+                ):
+
+                    block.append(
+                        lines[x]
+                    )
+
+                value = " ".join(
+                    block
+                )
+
+                if value not in experience:
+
+                    experience.append(
+                        value
+                    )
+
+    return experience[:10]
+
+
+# ============================================================
+# EXPERIENCE YEARS
+# ============================================================
+
+def extract_experience_years(
+    text,
+    experience
+):
+
+    values = []
+
+    patterns = [
+        r"(\d+(?:\.\d+)?)\s*\+?\s*years?\s+(?:of\s+)?experience",
+        r"(\d+(?:\.\d+)?)\s*\+?\s*years?\s+in",
+        r"(\d+(?:\.\d+)?)\s*\+?\s*yrs?\s+(?:of\s+)?experience"
     ]
 
-    values=[]
     for pattern in patterns:
-        matches=re.findall(pattern,text_lower)
-        for value in matches:
+
+        for match in re.finditer(
+            pattern,
+            text.lower()
+        ):
+
             try:
-                values.append(float(value))
-            except ValueError:
+
+                values.append(
+                    float(
+                        match.group(1)
+                    )
+                )
+
+            except Exception:
                 pass
 
     if values:
+
         return max(values)
 
-    year_pattern=r"\b(20\d{2})\s*(?:-|–|—|to)\s*(20\d{2}|present|current)\b"
-    matches=re.findall(year_pattern,text_lower)
-    durations=[]
-    current_year=datetime.now().year
-
-    for start,end in matches:
-        try:
-            start_year=int(start)
-            if end in ["present","current"]:
-                end_year=current_year
-            else:
-                end_year=int(end)
-            duration=end_year-start_year
-            if 0<duration<=50:
-                durations.append(float(duration))
-        except ValueError:
-            continue
-
-    if durations:
-        return max(durations)
-
-    month_pattern=(
-        r"(January|February|March|April|May|June|July|August|September|October|November|December)"
-        r"\s+(20\d{2})\s*(?:-|–|—|to)\s*"
-        r"(January|February|March|April|May|June|July|August|September|October|November|December)"
-        r"\s+(20\d{2}|present|current)"
+    # Internship / experience date ranges
+    date_ranges = re.findall(
+        r"((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
+        r"[a-z]*\s+)?"
+        r"(20\d{2})"
+        r"\s*[-–]\s*"
+        r"((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
+        r"[a-z]*\s+)?"
+        r"(20\d{2}|Present|Current)",
+        text,
+        flags=re.I
     )
 
-    matches=re.findall(month_pattern,text_lower)
+    if date_ranges:
 
-    months={
-        "january":1,
-        "february":2,
-        "march":3,
-        "april":4,
-        "may":5,
-        "june":6,
-        "july":7,
-        "august":8,
-        "september":9,
-        "october":10,
-        "november":11,
-        "december":12
+        years = []
+
+        for item in date_ranges:
+
+            try:
+
+                start_year = int(
+                    item[1]
+                )
+
+                end_value = item[3]
+
+                if end_value.lower() in [
+                    "present",
+                    "current"
+                ]:
+
+                    import datetime
+
+                    end_year = datetime.datetime.now().year
+
+                else:
+
+                    end_year = int(
+                        end_value
+                    )
+
+                difference = end_year - start_year
+
+                if 0 <= difference <= 50:
+
+                    years.append(
+                        float(difference)
+                    )
+
+            except Exception:
+                pass
+
+        if years:
+
+            return max(
+                years
+            )
+
+    return 0.0
+
+
+# ============================================================
+# EDUCATION
+# ============================================================
+
+def extract_education(
+    text,
+    sections
+):
+
+    education = []
+
+    section_lines = sections.get(
+        "education",
+        []
+    )
+
+    if section_lines:
+
+        for line in section_lines:
+
+            if line not in education:
+
+                education.append(
+                    line
+                )
+
+    # Fallback
+    if not education:
+
+        lines = get_lines(text)
+
+        education_keywords = [
+            "b.tech",
+            "btech",
+            "b.e",
+            "b.e.",
+            "bachelor",
+            "m.tech",
+            "mtech",
+            "m.e",
+            "master",
+            "mca",
+            "mba",
+            "bca",
+            "bsc",
+            "m.sc",
+            "msc",
+            "intermediate",
+            "higher secondary",
+            "junior college",
+            "school"
+        ]
+
+        for i, line in enumerate(lines):
+
+            lower = line.lower()
+
+            if any(
+                keyword in lower
+                for keyword in education_keywords
+            ):
+
+                block = []
+
+                for x in range(
+                    i,
+                    min(
+                        len(lines),
+                        i + 4
+                    )
+                ):
+
+                    block.append(
+                        lines[x]
+                    )
+
+                value = " | ".join(
+                    block
+                )
+
+                if value not in education:
+
+                    education.append(
+                        value
+                    )
+
+    return education[:20]
+
+
+# ============================================================
+# PROJECTS
+# ============================================================
+
+def extract_projects(
+    text,
+    sections
+):
+
+    projects = []
+
+    section_lines = sections.get(
+        "projects",
+        []
+    )
+
+    if section_lines:
+
+        current = []
+
+        for line in section_lines:
+
+            if not line:
+                continue
+
+            # New project often begins with a title
+            # followed by technologies or description
+            if (
+                current
+                and (
+                    line.startswith("•")
+                    or line.startswith("-")
+                    or re.match(
+                        r"^[A-Z][A-Za-z0-9 &:/()_-]{3,60}$",
+                        line
+                    )
+                )
+            ):
+
+                projects.append(
+                    " ".join(
+                        current
+                    )
+                )
+
+                current = []
+
+            current.append(
+                line
+            )
+
+        if current:
+
+            projects.append(
+                " ".join(
+                    current
+                )
+            )
+
+    # --------------------------------------------------------
+    # Fallback project detection
+    # --------------------------------------------------------
+
+    if not projects:
+
+        lines = get_lines(text)
+
+        project_keywords = [
+            "developed",
+            "built",
+            "created",
+            "implemented",
+            "designed",
+            "project",
+            "application",
+            "platform",
+            "system"
+        ]
+
+        technology_words = [
+            "python",
+            "java",
+            "react",
+            "flask",
+            "django",
+            "machine learning",
+            "deep learning",
+            "mongodb",
+            "mysql",
+            "postgresql",
+            "tensorflow",
+            "pytorch"
+        ]
+
+        for i, line in enumerate(lines):
+
+            lower = line.lower()
+
+            has_project_word = any(
+                x in lower
+                for x in project_keywords
+            )
+
+            has_technology = any(
+                x in lower
+                for x in technology_words
+            )
+
+            if (
+                has_project_word
+                and (
+                    has_technology
+                    or len(line) > 50
+                )
+            ):
+
+                block = []
+
+                for x in range(
+                    max(0, i - 1),
+                    min(
+                        len(lines),
+                        i + 5
+                    )
+                ):
+
+                    block.append(
+                        lines[x]
+                    )
+
+                value = " ".join(
+                    block
+                )
+
+                if value not in projects:
+
+                    projects.append(
+                        value
+                    )
+
+    return projects[:15]
+
+
+# ============================================================
+# CERTIFICATIONS
+# ============================================================
+
+def extract_certifications(
+    text,
+    sections
+):
+
+    certifications = []
+
+    section_lines = sections.get(
+        "certifications",
+        []
+    )
+
+    if section_lines:
+
+        for line in section_lines:
+
+            if line not in certifications:
+
+                certifications.append(
+                    line
+                )
+
+    # --------------------------------------------------------
+    # Fallback
+    # --------------------------------------------------------
+
+    if not certifications:
+
+        lines = get_lines(text)
+
+        certificate_keywords = [
+            "certified",
+            "certification",
+            "certificate",
+            "coursera",
+            "udemy",
+            "nptel",
+            "aws certified",
+            "microsoft certified",
+            "google certified",
+            "oracle certified",
+            "hackerrank",
+            "skillrack"
+        ]
+
+        for i, line in enumerate(lines):
+
+            lower = line.lower()
+
+            if any(
+                keyword in lower
+                for keyword in certificate_keywords
+            ):
+
+                value = line
+
+                if value not in certifications:
+
+                    certifications.append(
+                        value
+                    )
+
+    return certifications[:15]
+
+
+# ============================================================
+# SUMMARY
+# ============================================================
+
+def extract_summary(
+    sections
+):
+
+    summary = sections.get(
+        "summary",
+        []
+    )
+
+    if summary:
+
+        return " ".join(
+            summary[:8]
+        )
+
+    return ""
+
+
+# ============================================================
+# MAIN EXTRACTION FUNCTION
+# ============================================================
+
+def extract_candidate_info(
+    text
+):
+
+    text = clean_text(
+        text
+    )
+
+    sections = extract_sections(
+        text
+    )
+
+    experience = extract_experience(
+        text,
+        sections
+    )
+
+    candidate = {
+
+        "name": extract_name(
+            text
+        ),
+
+        "email": extract_email(
+            text
+        ),
+
+        "phone": extract_phone(
+            text
+        ),
+
+        "education": extract_education(
+            text,
+            sections
+        ),
+
+        "skills": extract_skills(
+            text
+        ),
+
+        "experience": experience,
+
+        "experience_years": extract_experience_years(
+            text,
+            experience
+        ),
+
+        "certifications": extract_certifications(
+            text,
+            sections
+        ),
+
+        "projects": extract_projects(
+            text,
+            sections
+        ),
+
+        "summary": extract_summary(
+            sections
+        )
     }
 
-    durations=[]
-    current_date=datetime.now()
-
-    for start_month,start_year,end_month,end_year in matches:
-        try:
-            start_date=int(start_year)*12+months[start_month]
-            if end_year in ["present","current"]:
-                end_date=current_date.year*12+current_date.month
-            else:
-                end_date=int(end_year)*12+months[end_month]
-            duration_months=end_date-start_date
-            if 0<duration_months<=600:
-                durations.append(round(duration_months/12,1))
-        except Exception:
-            continue
-
-    if durations:
-        return max(durations)
-
-    return None
-
-def extract_candidate_info(text):
-    text=clean_text(text)
-    candidate={
-        "name":extract_name(text),
-        "email":extract_email(text),
-        "phone":extract_phone(text),
-        "education":extract_education(text),
-        "skills":extract_skills(text),
-        "experience":extract_experience(text),
-        "experience_years":calculate_experience_years(text),
-        "projects":extract_projects(text),
-        "certifications":extract_certifications(text),
-        "awards":extract_awards(text)
-    }
     return candidate
 
-def generate_profile(candidate):
-    data={
-        "Name":candidate["name"],
-        "Email":candidate["email"],
-        "Phone":candidate["phone"],
-        "Education":" | ".join(candidate["education"]),
-        "Skills":", ".join(candidate["skills"]),
-        "Experience":" | ".join(candidate["experience"]),
-        "Experience Years":candidate["experience_years"],
-        "Projects":" | ".join(candidate["projects"]),
-        "Certifications":" | ".join(candidate["certifications"]),
-        "Awards":" | ".join(candidate["awards"])
-    }
-    return pd.DataFrame([data])
 
-def display_candidate_profile(candidate):
-    print("\n")
-    print("="*70)
-    print("              STRUCTURED CANDIDATE PROFILE")
-    print("="*70)
-    print(f"\nName             : {candidate['name'] or 'Not detected'}")
-    print(f"Email            : {candidate['email'] or 'Not detected'}")
-    print(f"Phone            : {candidate['phone'] or 'Not detected'}")
-    print("\nEducation:")
-    if candidate["education"]:
-        for item in candidate["education"]:
-            print(f"  • {item}")
-    else:
-        print("  Not detected")
-    print("\nSkills:")
-    if candidate["skills"]:
-        print("  "+", ".join(candidate["skills"]))
-    else:
-        print("  Not detected")
-    print("\nExperience:")
-    if candidate["experience"]:
-        for item in candidate["experience"]:
-            print(f"  • {item}")
-    else:
-        print("  Not detected")
-    print("\nExperience Duration:")
-    if candidate["experience_years"] is not None:
-        print(f"  {candidate['experience_years']} years")
-    else:
-        print("  Not detected")
-    print("\nProjects:")
-    if candidate["projects"]:
-        for item in candidate["projects"]:
-            print(f"  • {item}")
-    else:
-        print("  Not detected")
-    print("\nCertifications:")
-    if candidate["certifications"]:
-        for item in candidate["certifications"]:
-            print(f"  • {item}")
-    else:
-        print("  Not detected")
-    print("\nAwards:")
-    if candidate["awards"]:
-        for item in candidate["awards"]:
-            print(f"  • {item}")
-    else:
-        print("  Not detected")
-    print("\n"+"="*70)
+# ============================================================
+# BACKWARD COMPATIBILITY
+# ============================================================
 
-def save_profile_to_csv(candidate,filename="candidate_profile.csv"):
-    df=generate_profile(candidate)
-    df.to_csv(filename,index=False)
-    print(f"\nStructured profile saved to: {filename}")
+def extract_candidate(
+    text
+):
+
+    return extract_candidate_info(
+        text
+    )
+
+
+def analyze_resume(
+    text
+):
+
+    return extract_candidate_info(
+        text
+    )
